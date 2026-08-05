@@ -34,7 +34,7 @@ El primer gran reto técnico consistió en procesar la base bruta del INEGI, la 
 ### Decisiones Clave de Ingeniería de Datos (`etl_esp.py`):
 1. **Limpieza con Expresiones Regulares (`re`):** Extracción automatizada de claves geográficas (`cve_geo`) a 5 dígitos y códigos de actividad económica (`cve_act`) para asegurar congruencia relacional.
 2. **Ingeniería de Características:** Cálculo vectorial al vuelo del **Cociente de Localización ($QL$)** y la **Participación Relativa ($PR$)**:
-   $$\text{QL}_{i,k} = \frac{e_{i,k} / \sum_k e_{i,k}}{\sum_i e_{i,k} / \sum_i \sum_k e_{i,k}}$$
+$$QL_{i,k} = \frac{e_{i,k} / \sum_k e_{i,k}}{\sum_i e_{i,k} / \sum_i \sum_k e_{i,k}}$$
 3. **Imputación Espacial Reutilizable (`fill_value=0`):** Para evitar "agujeros" geográficos en el cruce vectorial (Shapefiles), se aplicó una tabla dinámica (`pivot_table`) imputando ceros estructurales donde la rama económica no tenía presencia física reportada.
 
 ```python
@@ -91,8 +91,13 @@ El análisis se estructuró mediante la metodología de los **Cuatro ejes Analí
 
 ### 3. Detección de Outliers y Especialización Territorial
 
-![Boxplots Especialización QL Personal Ocupado](assets/02_outliers_especializacion_boxplots.png)
-![Boxplots Especialización QL Producción Bruta](assets/05_outliers_ql_pb_boxplots.png)
+<p align="center">
+  <img src="assets/02_outliers_especializacion_boxplots.png" alt="Boxplot QL Personal Ocupado" width="85%">
+</p>
+
+<p align="center">
+  <img src="assets/05_outliers_ql_pb_boxplots.png" alt="Boxplot QL Producción Bruta" width="85%">
+</p>
 
 #### Hallazgos Clave:
 * **Como Economista- La especialización es un club exclusivo:** En la Participación Relativa (`PR_ue`), la caja del diagrama es amplia y visible. No obstante, en el Cociente de Localización de Producción Bruta (`QL_pb`), la caja se aplasta por completo contra el cero, dejando únicamente puntos atípicos (*outliers*) aislados en el extremo derecho. Tener sucursales no implica especialización económica real; la riqueza no se derrama, se encapsula.
