@@ -34,7 +34,9 @@ El primer gran reto técnico consistió en procesar la base bruta del INEGI, la 
 ### Decisiones Clave de Ingeniería de Datos (`etl_esp.py`):
 1. **Limpieza con Expresiones Regulares (`re`):** Extracción automatizada de claves geográficas (`cve_geo`) a 5 dígitos y códigos de actividad económica (`cve_act`) para asegurar congruencia relacional.
 2. **Ingeniería de Características:** Cálculo vectorial al vuelo del **Cociente de Localización ($QL$)** y la **Participación Relativa ($PR$)**:
+
 $$QL_{i,k} = \frac{e_{i,k} / \sum_k e_{i,k}}{\sum_i e_{i,k} / \sum_i \sum_k e_{i,k}}$$
+
 3. **Imputación Espacial Reutilizable (`fill_value=0`):** Para evitar "agujeros" geográficos en el cruce vectorial (Shapefiles), se aplicó una tabla dinámica (`pivot_table`) imputando ceros estructurales donde la rama económica no tenía presencia física reportada.
 
 ```python
@@ -52,7 +54,7 @@ base_ancha = pd.pivot_table(
 
 ## Análisis Exploratorio de Datos Espaciales (EDA)
 
-El análisis se estructuró mediante la metodología de los **Cuatro ejes Analíticos**:
+El análisis se estructuró mediante la metodología de los **Cuatro Sombreros Analíticos**:
 1. **Economista:** Evaluación de economías de aglomeración y modelo Centro-Periferia.
 2. **Inversor / Decision-Maker:** Eficiencia en asignación de capital e inteligencia comercial.
 3. **Analista de Datos / Econometrista:** Validación de supuestos matemáticos (sesgo, curtosis, varianza).
@@ -70,22 +72,24 @@ El análisis se estructuró mediante la metodología de los **Cuatro ejes Analí
 | **`va_52_2018`** | 16.0 | 42,915.84 | 88,431.30 | 0.0 | 152.70 | 611.78 | 31,929.20 | 334,650.62 | **2.06** |
 
 #### Hallazgos Clave:
-* **Como Economista- La ilusión de la sucursal vs. El peso del corporativo:** Las Unidades Económicas (`ue`) están dispersas por toda la ciudad (mínimo de 18 sucursales hasta en la alcaldía más remota, $CV = 0.85$). Sin embargo, el Valor Agregado (`va`) exhibe un desbalance brutal: la mediana es de apenas $611$ mdp, mientras que el nodo dominante alcanza $334,650$ mdp. La infraestructura física capta clientes en la periferia, pero el capital de alto valor se aglomera en polos corporativos cerrados.
-* **Como Inversor- Un mercado de "El ganador se lo lleva todo":** El 75% de las alcaldías concentra solo hasta 48,000 empleados, pero el máximo salta a 119,156. Para estrategias B2B o desarrollos inmobiliarios corporativos, el mercado objetivo real se reduce a 2 o 3 alcaldías. Asignar recursos fuera de este cluster consolidado representa un costo de oportunidad elevado.
-* **Como Analista de Datos- La explosión de la varianza:** El Coeficiente de Variación ($CV = \text{std}/\text{mean}$) escala aceleradamente desde $0.85$ en sucursales hasta $2.06$ en Valor Agregado. En Producción Bruta (`pb`), la media ($66,019$) supera por más de 50 veces a la mediana ($1,198$). Esto evidencia un Sesgo a la Derecha (*Right Skew*) severo que destruiría los supuestos de un modelo de regresión lineal clásico sin transformaciones previas.
-* **Como Programador- Integridad relacional:** La columna `count` marca $16.0$ en todas las variables y el `min` en $0.0$, confirmando que la lógica `fill_value=0` en la fase de pivotaje previno la aparición de celdas vacías (`NaN`) que colapsarían el análisis espacial.
+* **Como Economista — La ilusión de la sucursal vs. El peso del corporativo:** Las Unidades Económicas (`ue`) están dispersas por toda la ciudad (mínimo de 18 sucursales hasta en la alcaldía más remota, $CV = 0.85$). Sin embargo, el Valor Agregado (`va`) exhibe un desbalance brutal: la mediana es de apenas $611$ mdp, mientras que el nodo dominante alcanza $334,650$ mdp. La infraestructura física capta clientes en la periferia, pero el capital de alto valor se aglomera en polos corporativos cerrados.
+* **Como Inversor — Un mercado de "El ganador se lo lleva todo":** El 75% de las alcaldías concentra solo hasta 48,000 empleados, pero el máximo salta a 119,156. Para estrategias B2B o desarrollos inmobiliarios corporativos, el mercado objetivo real se reduce a 2 o 3 alcaldías. Asignar recursos fuera de este cluster consolidado representa un costo de oportunidad elevado.
+* **Como Analista de Datos — La explosión de la varianza:** El Coeficiente de Variación ($CV = \text{std}/\text{mean}$) escala aceleradamente desde $0.85$ en sucursales hasta $2.06$ en Valor Agregado. En Producción Bruta (`pb`), la media ($66,019$) supera por más de 50 veces a la mediana ($1,198$). Esto evidencia un Sesgo a la Derecha (*Right Skew*) severo que destruiría los supuestos de un modelo de regresión lineal clásico sin transformaciones previas.
+* **Como Programador — Integridad relacional:** La columna `count` marca $16.0$ en todas las variables y el `min` en $0.0$, confirmando que la lógica `fill_value=0` en la fase de pivotaje previno la aparición de celdas vacías (`NaN`) que colapsarían el análisis espacial.
 
 ---
 
 ### 2. Análisis de Distribuciones: Asimetría Severa
 
-![Distribución Asimétrica Personal Ocupado vs Producción Bruta](assets/01_distribucion_asimetrica_po_vs_pb.png)
+<p align="center">
+  <img src="assets/01_distribucion_asimetrica_po_vs_pb.png" alt="Distribución Asimétrica Personal Ocupado vs Producción Bruta" width="85%">
+</p>
 
 #### Hallazgos Clave:
-* **Como Economista- Asimetría entre trabajo y capital:** La curva del Personal Ocupado (`po`, azul) decae de forma relativamente suave hacia los 100,000 empleados. En contraste, la Producción Bruta (`pb`, roja) cae en picada inmediata hacia el cero. El empleo operativo requiere presencia física en el territorio; la acumulación de capital está masivamente concentrada.
-* **Como Inversor- Cazando en la Cola Larga:** El 80%-90% del territorio compite por márgenes reducidos (el pico a la izquierda). El valor real para un inversor institucional se localiza exclusivamente en la cola larga de la derecha.
-* **Como Analista de Datos- Trabajar sin la Campana de Gauss:** El gráfico demuestra distribuciones leptocúrticas con asimetría positiva extrema. Esto justifica formalmente el uso de transformaciones logarítmicas ($\ln y$) antes de implementar estimaciones econométricas.
-* **Como Programador. Optimización UI/UX:** El gráfico evidencia cómo la escala lineal comprime 14 alcaldías en las primeras barras. Para tableros interactivos futuros, se recomienda aplicar escala logarítmica en los ejes (`plt.xscale('log')`).
+* **Como Economista — Asimetría entre trabajo y capital:** La curva del Personal Ocupado (`po`, azul) decae de forma relativamente suave hacia los 100,000 empleados. En contraste, la Producción Bruta (`pb`, roja) cae en picada inmediata hacia el cero. El empleo operativo requiere presencia física en el territorio; la acumulación de capital está masivamente concentrada.
+* **Como Inversor — Cazando en la Cola Larga:** El 80%-90% del territorio compite por márgenes reducidos (el pico a la izquierda). El valor real para un inversor institucional se localiza exclusivamente en la cola larga de la derecha.
+* **Como Analista de Datos — La muerte de la Campana de Gauss:** El gráfico demuestra distribuciones leptocúrticas con asimetría positiva extrema. Esto justifica formalmente el uso de transformaciones logarítmicas ($\ln y$) antes de implementar estimaciones econométricas.
+* **Como Programador — Optimización UI/UX:** El gráfico evidencia cómo la escala lineal comprime 14 alcaldías en las primeras barras. Para tableros interactivos futuros, se recomienda aplicar escala logarítmica en los ejes (`plt.xscale('log')`).
 
 ---
 
@@ -100,16 +104,22 @@ El análisis se estructuró mediante la metodología de los **Cuatro ejes Analí
 </p>
 
 #### Hallazgos Clave:
-* **Como Economista- La especialización es un club exclusivo:** En la Participación Relativa (`PR_ue`), la caja del diagrama es amplia y visible. No obstante, en el Cociente de Localización de Producción Bruta (`QL_pb`), la caja se aplasta por completo contra el cero, dejando únicamente puntos atípicos (*outliers*) aislados en el extremo derecho. Tener sucursales no implica especialización económica real; la riqueza no se derrama, se encapsula.
+* **Como Economista — Especialización laboral vs. Concentración de capital:** Al comparar los Cocientes de Localización de Personal Ocupado (`QL_po`) y Producción Bruta (`QL_pb`), se observa una clara jerarquía espacial:
+  * **En `QL_po` (Personal Ocupado):** La caja ($IQR$) se extiende desde valores cercanos a 0 hasta ligeramente por encima de 1.0 ($Q_3 \approx 1.12$), pero la **mediana se encuentra completamente pegada a la izquierda** (cerca de 0.08–0.15). Esto demuestra que aunque algunas alcaldías del cuartil superior logran desplegar empleo operativo suficiente para superar la media de la ciudad ($QL > 1$), el 50% central del territorio opera con niveles de empleo financiero marginales.
+  * **En `QL_pb` (Producción Bruta):** La caja se comprime aún más hacia el origen, abarcando desde cerca de 0 hasta entre 0.75 y 1.00 ($Q_3 \approx 0.85$), con la **mediana situada por debajo de 0.25**. Esto significa que el 75% de las alcaldías de la CDMX no alcanzan la especialización en generación de riqueza ($QL < 1$).
+* **Como Inversor — El verdadero "Club Exclusivo":** Tener sucursales o personal ocupado disperso en el territorio ($QL_{po} > 1$) no garantiza la generación de alto valor económico ($QL_{pb} < 1$). La riqueza financiera no se derrama proporcionalmente al empleo; la producción bruta masiva ($QL_{pb} > 3.0$) queda reservada exclusivamente para los puntos atípicos (*outliers*) del extremo derecho (el nodo corporativo central).
+* **Como Analista de Datos — Asimetría en la caja y sesgo a la derecha:** En ambos diagramas de caja, la posición de la mediana (muy cercana al límite inferior de la caja) confirma la asimetría positiva severa. Para la Producción Bruta (`QL_pb`), la presencia de un *outlier* extremo situado a más de 3 veces el límite de especialización valida la necesidad de tratar estadísticamente estos polos corporativos de manera diferenciada.
 
 ---
 
 ### 4. Relaciones Bivariadas y Fracaso de Modelos Lineales Tradicionales
 
-![Matriz de Dispersión y MCO](assets/03_relaciones_bivariadas_mco.png)
+<p align="center">
+  <img src="assets/03_relaciones_bivariadas_mco.png" alt="Matriz de Dispersión y MCO" width="85%">
+</p>
 
 #### Hallazgos Clave:
-* **Como Analista de Datos & Econometrista- Distorsión por Puntos de Apalancamiento:** Los gráficos de dispersión muestran que los modelos de Mínimos Cuadrados Ordinarios (MCO) aplicados a variables crudas son arrastrados por observaciones atípicas extremas (*leverage points*), sesgando las pendientes de regresión y distorsionando los p-valores.
+* **Como Analista de Datos & Econometrista — Distorsión por Puntos de Apalancamiento:** Los gráficos de dispersión muestran que los modelos de Mínimos Cuadrados Ordinarios (MCO) aplicados a variables crudas son arrastrados por observaciones atípicas extremas (*leverage points*), sesgando las pendientes de regresión y distorsionando los p-valores.
 
 ---
 
@@ -131,7 +141,9 @@ Para evitar sesgos en la representación cartográfica, se compararon métodos d
 (1.90, 3.22] | Count: 1   <-- EL MONSTRUO CORPORATIVO (Máxima concentración)
 ```
 
-![Mapa de Participación Relativa UE](assets/04_mapa_agrupaciones_pr_ue.png)
+<p align="center">
+  <img src="assets/04_mapa_agrupaciones_pr_ue.png" alt="Mapa de Agrupaciones PR UE" width="85%">
+</p>
 
 #### Hallazgos Clave:
 * **Como Programador & Analista Espacial — Cuantiles vs. Fisher-Jenks:** El método de Cuantiles enmascara la realidad al forzar 4 municipios por rango. El algoritmo de **Fisher-Jenks** minimiza la varianza interna y aísla con precisión las 10 alcaldías periféricas sin especialización, identificando con claridad el nodo corporativo principal en el intervalo $[1.90, 3.22]$.
