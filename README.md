@@ -92,7 +92,7 @@ El análisis se estructuró mediante la metodología de los **Cuatro ejes Analí
 ### 3. Detección de Outliers y Especialización Territorial
 
 <p align="center">
-  <img src="assets/02_outliers_especializacion_boxplots.png" alt="Boxplot QL Personal Ocupado" width="85%">
+  <img src="assets/02_outliers_especializacion_boxplots (2).png" alt="Boxplot QL Personal Ocupado" width="85%">
 </p>
 
 <p align="center">
