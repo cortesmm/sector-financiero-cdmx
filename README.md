@@ -54,7 +54,7 @@ base_ancha = pd.pivot_table(
 
 ## Análisis Exploratorio de Datos Espaciales (EDA)
 
-El análisis se estructuró mediante la metodología de los **Cuatro Sombreros Analíticos**:
+El análisis se estructuró mediante la metodología de los **Cuatro Ejes Analíticos**:
 1. **Economista:** Evaluación de economías de aglomeración y modelo Centro-Periferia.
 2. **Inversor / Decision-Maker:** Eficiencia en asignación de capital e inteligencia comercial.
 3. **Analista de Datos / Econometrista:** Validación de supuestos matemáticos (sesgo, curtosis, varianza).
